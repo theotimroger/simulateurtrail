@@ -1,0 +1,214 @@
+import gpxpy
+import numpy as np
+
+
+
+# --- Fonctions ---
+def format_time(seconds):
+    """Formate un temps en secondes vers hh:mm:ss."""
+    if seconds is None:
+        return "-"
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    return f"{h:02d}:{m:02d}:{s:02d}"
+
+
+def parse_allure(allure_str):
+    minutes, seconds = map(int, allure_str.split(":"))
+    total_seconds = minutes * 60 + seconds
+    return 1000 / total_seconds  # vitesse en m/s
+
+def vitesse_to_allure(vitesse):
+    if vitesse == 0:
+        return float('inf')
+    sec_per_km = 1000 / vitesse
+    return sec_per_km / 60  # minutes par km
+
+def minetti_cost_running(i):
+    a, b, c, d, e, f = 155.4, -30.4, -43.3, 46.3, 19.5, 3.6
+    return a * i**5 + b * i**4 + c*i**3 + d*i**2 + e*i + f
+
+def adjusted_speed(flat_speed, slope):
+    i = slope / 100
+    C0 = minetti_cost_running(0)
+    Ci = minetti_cost_running(i)
+    v = min(1.3*flat_speed,flat_speed * (C0 / Ci)) #vitesse ajustée avec max car difficle d'aller bcp plus vite en descente
+    return v
+
+def smooth(y, box_pts=5):
+    y = np.array(y)
+    n = len(y)
+    y_smooth = np.copy(y)
+    half_window = box_pts // 2
+    for i in range(n):
+        start = max(0, i - half_window)
+        end = min(n, i + half_window + 1)
+        y_smooth[i] = np.mean(y[start:end])
+    return y_smooth
+
+def simulate_temps_total(flat_speed, distances, elevations):
+    """
+    Calcule le temps total estimé sur un parcours pour une vitesse sur plat donnée,
+    en utilisant les vraies distances entre points successifs.
+
+    Args:
+        flat_speed (float): Vitesse sur plat en m/s.
+        distances (list of float): Distances cumulées en km (vrai chemin parcouru).
+        elevations (list of float): Altitudes correspondantes en mètres.
+
+    Returns:
+        float: Temps total estimé en secondes.
+    """
+    total_time = 0
+    for i in range(1, len(distances)):
+        d = (distances[i] - distances[i-1]) * 1000  # mètres
+        dz = elevations[i] - elevations[i-1]
+        slope = (dz / d) * 100 if d != 0 else 0
+        v_adj = adjusted_speed(flat_speed, slope)
+        if v_adj != 0:
+            total_time += d / v_adj
+    return total_time
+
+
+
+def trouver_vitesse_plate(distances_pace, elevations, temps_espere_sec, precision=1):
+    """
+    Trouve la vitesse sur plat équivalente pour correspondre au temps espéré
+    en utilisant une recherche par dichotomie.
+
+    Args:
+        distances_pace (list of float): Distances intermédiaires en km.
+        elevations (list of float): Altitudes correspondantes en mètres.
+        temps_espere_sec (float): Temps total espéré en secondes.
+        precision (float): Précision souhaitée en secondes pour l'approximation.
+
+    Returns:
+        float: Vitesse sur plat en m/s.
+    """
+    v_min = 1.0  # m/s
+    v_max = 6.0  # m/s
+    iteration = 0
+
+    while v_max - v_min > 0.0001:
+        iteration += 1
+        v_mid = (v_min + v_max) / 2
+        temps_mid = simulate_temps_total(v_mid, distances_pace, elevations)
+
+        if abs(temps_mid - temps_espere_sec) < precision:
+            return v_mid  # Vitesse trouvée !
+
+        if temps_mid > temps_espere_sec:
+            v_min = v_mid  # Temps trop long -> aller plus vite
+        else:
+            v_max = v_mid  # Temps trop court -> aller moins vite
+
+        if iteration > 100:
+            break
+
+    return (v_min + v_max) / 2
+
+def compute_cumulative_time(flat_speed, distances, elevations):
+    """
+    Calcule cumulative_time proprement à partir de distances et elevations.
+
+    Args:
+        flat_speed (float): vitesse sur plat m/s
+        distances (list of float): distances cumulées (km)
+        elevations (list of float): altitudes (m)
+
+    Returns:
+        list of float: temps cumulé en secondes pour chaque point
+    """
+    cumulative_time = [0.0]
+
+    for i in range(1, len(distances)):
+        d = (distances[i] - distances[i-1]) * 1000  # mètres
+        dz = elevations[i] - elevations[i-1]
+        slope = (dz / d) * 100 if d != 0 else 0
+        v_adj = adjusted_speed(flat_speed, slope)
+
+        if v_adj > 0:
+            next_time = cumulative_time[-1] + d / v_adj
+        else:
+            next_time = cumulative_time[-1]
+
+        cumulative_time.append(next_time)
+
+    return cumulative_time
+
+def compute_paces(distances, elevations, flat_speed):
+    """
+    Calcule l'allure ajustée (min/km) pour chaque segment du parcours.
+
+    Args:
+        distances (list of float): Distances cumulées en km.
+        elevations (list of float): Altitudes correspondantes en mètres.
+        flat_speed (float): Vitesse sur plat en m/s.
+
+    Returns:
+        list of float: Allures ajustées (min/km) pour chaque segment.
+    """
+    paces = []
+    for i in range(1, len(distances)):
+        d = (distances[i] - distances[i-1]) * 1000  # mètres
+        dz = elevations[i] - elevations[i-1]
+        slope = (dz / d) * 100 if d != 0 else 0
+
+        v_adj = adjusted_speed(flat_speed, slope)
+
+        if v_adj > 0:
+            pace = (1000 / v_adj) / 60  # min/km
+        else:
+            pace = None  # ou pace = valeur maximale comme 70 min/km si tu préfères
+
+        paces.append(pace)
+    return paces
+
+def process_gpx(gpx_content):
+    """Lis le fichier GPX et retourne distances, elevations, etc."""
+    gpx = gpxpy.parse(gpx_content)
+
+    last_point = None
+    total_distance = 0
+    distances = []
+    elevations = []
+
+    DISTANCE_MIN = 30  # mètres entre 2 points retenus
+    distance_since_last_save = 0
+
+    for track in gpx.tracks:
+        for segment in track.segments:
+            for point in segment.points:
+                if last_point is not None:
+                    d = point.distance_3d(last_point) or 0
+                    total_distance += d
+                    distance_since_last_save += d
+
+                    if distance_since_last_save >= DISTANCE_MIN:
+                        distances.append(total_distance / 1000)  # en km
+                        elevations.append(point.elevation)
+                        distance_since_last_save = 0  # reset après avoir sauvé
+                else:
+                    # Sauvegarder tout premier point
+                    distances.append(total_distance / 1000)
+                    elevations.append(point.elevation)
+
+                last_point = point
+
+    distances_pace = [(distances[i] + distances[i-1]) / 2 for i in range(1, len(distances))]
+
+    return distances, elevations, distances_pace
+
+def calculate_deniv(elevations):
+    d_plus = [0]
+    d_moins = [0]
+    for i in range(1,len(elevations)):
+        deniv_segment = elevations[i]-elevations[i-1]
+        if deniv_segment > 0:
+            d_plus.append(d_plus[-1]+deniv_segment)
+            d_moins.append(d_moins[-1])
+        else:
+            d_plus.append(d_plus[-1])
+            d_moins.append(d_moins[-1]+deniv_segment)
+    return d_plus, d_moins
