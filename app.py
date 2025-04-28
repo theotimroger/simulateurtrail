@@ -10,6 +10,21 @@ from utils import (
 )
 
 st.title("Analyse de trace GPX - Allure ajustée à la pente")
+st.info(
+    """
+    🏔️ **Bienvenue sur le simulateur d'allure ajustée à la pente !**
+
+    Cette application vous permet d'analyser une trace GPX en tenant compte de votre **temps total espéré**,
+ 
+
+    ➡️ L'algorithme calcule alors :
+    - votre **allure constante équivalente sur du plat**,
+    - votre **profil d'allure ajustée** tout au long du parcours,
+    - et vos **temps de passage estimés** à chaque point.
+
+    **Chargez simplement votre fichier GPX, entrez votre objectif de temps et votre allure maximale.**
+    """
+)
 
 uploaded_file = st.file_uploader("Chargez votre fichier GPX", type=["gpx"])
 
