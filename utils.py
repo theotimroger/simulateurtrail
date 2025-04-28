@@ -14,10 +14,14 @@ def format_time(seconds):
     return f"{h:02d}:{m:02d}:{s:02d}"
 
 def vitesse_to_allure(vitesse):
+    if vitesse == 0:
+        return "∞"
     sec_per_km = 1000 / vitesse
+    sec_per_km = round(sec_per_km)  # ARRONDIR AVANT de séparer en minutes + secondes
     minutes = int(sec_per_km // 60)
     seconds = int(sec_per_km % 60)
     return f"{minutes:02d}:{seconds:02d}"
+
 
 
 def parse_allure(allure_str):
@@ -25,11 +29,6 @@ def parse_allure(allure_str):
     total_seconds = minutes * 60 + seconds
     return 1000 / total_seconds  # vitesse en m/s
 
-def vitesse_to_allure(vitesse):
-    if vitesse == 0:
-        return float('inf')
-    sec_per_km = 1000 / vitesse
-    return sec_per_km / 60  # minutes par km
 
 def minetti_cost_running(i):
     a, b, c, d, e, f = 155.4, -30.4, -43.3, 46.3, 19.5, 3.6

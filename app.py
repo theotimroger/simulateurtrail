@@ -69,8 +69,37 @@ if uploaded_file is not None and temps_espere:
 
     allure_plat_str_strava = vitesse_to_allure(flat_speed_strava)
 
-    st.info(f"Allure constant équivalente sur du plat (Minetti): {allure_plat_str} min/km")
-    st.info(f"Allure constant équivalente sur du plat (Strava): {allure_plat_str_strava} min/km")
+    st.markdown(
+    """
+    <div style="text-align: center; color: black; background-color: white; padding: 10px; border-radius: 5px;">
+        <h3>Allure ajustée à la pente</h3>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("<h3 style='text-align: center;'>Modèle Minetti</h3>", unsafe_allow_html=True)
+        st.markdown(
+        f"""
+        <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; text-align: center;">
+            <strong>{allure_plat_str} min/km</strong>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    with col2:
+        st.markdown("<h3 style='text-align: center;'>Modèle Strava</h3>", unsafe_allow_html=True)
+        st.markdown(
+        f"""
+        <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; text-align: center;">
+            <strong>{allure_plat_str_strava} min/km</strong>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Recalcul complet avec la bonne vitesse
     cumulative_time = compute_cumulative_time(flat_speed, distances, elevations)
