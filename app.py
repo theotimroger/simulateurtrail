@@ -142,3 +142,45 @@ if uploaded_file is not None and temps_espere:
         s = int(total_time_sec % 60)
 
         st.success(f"Temps estimé au km {distance_target:.2f} : {h:02d}:{m:02d}:{s:02d}")
+
+with st.expander("ℹ️ Voir explication détaillée sur le calcul"):
+    st.markdown(
+        """
+        ### 🧠 Comment fonctionne ce simulateur ?
+
+        L'algorithme repose sur **le modèle biomécanique de Minetti**,
+        qui estime le **coût énergétique** de la course à pied en fonction de la pente.
+
+        ➡️ **Sur terrain plat**, le coût énergétique est minimal.
+        ➡️ **En montée**, le coût énergétique augmente (on dépense plus pour s'élever).
+        ➡️ **En descente**, le coût diminue... mais on ne peut pas courir infiniment vite sans limite physique.
+
+        ### ⚙️ Calculs effectués :
+
+        - L'algorithme cherche une **vitesse ajustée à la pente (VAP)** qui vous permettrait d'atteindre ce temps,
+          tout en tenant compte :
+            - du profil de pente de votre trace GPX,
+            - du temps total espéré
+
+        - Pour chaque segment du parcours :
+            - Le coût énergétique est recalculé selon la pente locale,
+            - La vitesse instantanée est adaptée en fonction de ce coût,
+            - En descente, la vitesse est plafonnée à 1.3 x VAP<sup>1</sup>.
+
+        ### 📈 Conséquences :
+
+        - Si votre vitesse max en descente est faible ➔ l'allure sur plat et en montée devra être plus rapide pour compenser.
+        - Plus votre objectif de temps est ambitieux ➔ plus la vitesse globale devra être élevée.
+
+        ---
+        **Modèle utilisé :**  
+        Minetti AE, Moia C, Roi GS, Susta D, Ferretti G. (2002)  
+        *Energy cost of walking and running at extreme uphill and downhill slopes*  
+        Journal of Applied Physiology.
+        ---
+        <sup>1</sup> Le modèle doit encore être ajusté à ce niveau. Le modèle de Minetti ne prenant pas en compte la technicité du terrain, il estime qu'atteindre 20km/h sur une descente de pente comprise entre -13% et -20% est équivalent à courir à 11.2 km/h sur du plat.
+
+        """,
+        unsafe_allow_html=True
+    )
+
