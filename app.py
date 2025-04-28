@@ -195,12 +195,14 @@ with st.expander("Voir explication du calcul"):
             - Le modèle Minetti se base sur le coût énergétique et les tests ont été réalisés en laboratoire. Il est très généreux sur la vitesse en descente.
             - Le modèle de Strava se base sur sa base de données d'activités de traileurs du monde entier. L'estimation est donc issue d'activités en conditions "réelles". Ce modèle reflète sûrement mieux l'aspect technique des descentes.
 
-        ---
-        <sup>1</sup> Minetti AE, Moia C, Roi GS, Susta D, Ferretti G. (2002), *Energy cost of walking and running at extreme uphill and downhill slopes* Journal of Applied Physiology.
-        <sup>2</sup> https://medium.com/strava-engineering/an-improved-gap-model-8b07ae8886c3
-        <sup>3</sup> Pour les utilisateurs de Strava, cette allure est également disponible dans les rapports d'activité.
-        <sup>4</sup> Je pense que le calcul doit encore être ajusté à ce niveau. Le modèle de Minetti ne prenant pas en compte la technicité du terrain, il estime qu'atteindre 20km/h sur une descente de pente comprise entre -13% et -20% est équivalent à courir à 11.2 km/h sur du plat.
-        ---
+        <hr>
+        <p style="font-size: 0.8em;">
+        <sup>1</sup> Minetti AE, Moia C, Roi GS, Susta D, Ferretti G. (2002), *Energy cost of walking and running at extreme uphill and downhill slopes*, Journal of Applied Physiology.<br>
+        <sup>2</sup> <a href="https://medium.com/strava-engineering/an-improved-gap-model-8b07ae8886c3" target="_blank">Source Strava Engineering</a><br>
+        <sup>3</sup> Pour les utilisateurs de Strava, cette allure est également disponible dans les rapports d'activité.<br>
+        <sup>4</sup> Le calcul doit encore être ajusté sur la technicité du terrain.
+        </p>
+        <hr>
         """,
         unsafe_allow_html=True
     )
