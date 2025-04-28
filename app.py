@@ -157,7 +157,7 @@ with st.expander("Voir explication du calcul"):
 
         ### Calculs effectués :
 
-        - L'algorithme cherche une **vitesse ajustée à la pente (VAP)** qui vous permettrait d'atteindre ce temps,
+        - L'algorithme cherche une **vitesse ajustée à la pente (VAP)**<sup>1</sup> qui vous permettrait d'atteindre ce temps,
           tout en tenant compte :
             - du profil de pente de votre trace GPX,
             - du temps total espéré
@@ -165,7 +165,7 @@ with st.expander("Voir explication du calcul"):
         - Pour chaque segment du parcours :
             - Le coût énergétique est recalculé selon la pente locale,
             - La vitesse instantanée est adaptée en fonction de ce coût,
-            - En descente, la vitesse est plafonnée à 1.3 x VAP<sup>1</sup>.
+            - En descente, la vitesse est plafonnée à 1.3 x VAP<sup>2</sup>.
 
         ### Conséquences :
 
@@ -178,7 +178,8 @@ with st.expander("Voir explication du calcul"):
         *Energy cost of walking and running at extreme uphill and downhill slopes*  
         Journal of Applied Physiology.
         ---
-        <sup>1</sup> Le modèle doit encore être ajusté à ce niveau. Le modèle de Minetti ne prenant pas en compte la technicité du terrain, il estime qu'atteindre 20km/h sur une descente de pente comprise entre -13% et -20% est équivalent à courir à 11.2 km/h sur du plat.
+        <sup>1</sup> Pour les utilisateurs de Strava, cette allure est également disponible dans les rapports d'activité. Strava utilise la fréquence cardiaque pour déterminer l'allure ajuster à la pente
+        <sup>2</sup> Le modèle doit encore être ajusté à ce niveau. Le modèle de Minetti ne prenant pas en compte la technicité du terrain, il estime qu'atteindre 20km/h sur une descente de pente comprise entre -13% et -20% est équivalent à courir à 11.2 km/h sur du plat.
 
         """,
         unsafe_allow_html=True
