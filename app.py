@@ -6,7 +6,10 @@ from utils import (
     compute_cumulative_time,
     format_time,
     compute_paces,
-    calculate_deniv
+    calculate_deniv,
+    trouver_vitesse_plate_strava,
+    compute_cumulative_time_strava,
+    compute_paces_strava,
 )
 
 st.title("Analyse de trace GPX - Allure ajustée à la pente")
@@ -36,7 +39,7 @@ if uploaded_file is not None:
     distances, elevations, distances_pace = process_gpx(gpx_content)
     d_plus, d_moins = calculate_deniv(elevations)
     st.info(f"Distance: {distances[-1]:.2f} km")
-    st.info(f"D+: {d_plus[-1]} m  D-: {d_moins[-1]}")
+    st.info(f"D+: {d_plus} m  D-: {d_moins}")
 
 temps_espere = st.text_input("Temps espéré (format hh:mm:ss)", value="06:15:30")
 
@@ -54,6 +57,8 @@ if uploaded_file is not None and temps_espere:
 
     # Trouver la vitesse sur plat correcte
     flat_speed = trouver_vitesse_plate(distances_pace, elevations, temps_espere_sec)
+    flat_speed_strava = trouver_vitesse_plate_strava(distances_pace, elevations, temps_espere_sec)
+
 
     # Calcul de l'allure correspondante
     sec_per_km = 1000 / flat_speed
@@ -61,16 +66,24 @@ if uploaded_file is not None and temps_espere:
     seconds = int(sec_per_km % 60)
     allure_plat_str = f"{minutes:02d}:{seconds:02d}"
 
-    st.info(f"Allure constant équivalente sur du plat: {allure_plat_str} min/km")
-    
+    sec_per_km_strava = 1000 / flat_speed_strava
+    minutes_strava = int(sec_per_km_strava // 60)
+    seconds_strava = int(sec_per_km_strava % 60)
+    allure_plat_str_strava = f"{minutes:02d}:{seconds:02d}"
+
+    st.info(f"Allure constant équivalente sur du plat (Minetti): {allure_plat_str} min/km")
+    st.info(f"Allure constant équivalente sur du plat (Strava): {allure_plat_str_strava} min/km")
 
     # Recalcul complet avec la bonne vitesse
     cumulative_time = compute_cumulative_time(flat_speed, distances, elevations)
+    cumulative_time_strava = compute_cumulative_time_strava(flat_speed_strava, distances, elevations)
 
     # Tracer les graphes
     fig = go.Figure()
 
     paces = compute_paces(distances, elevations, flat_speed)
+    paces_strava = compute_paces_strava(distances, elevations, flat_speed_strava)
+
     # Profil Altitude
     fig.add_trace(go.Scatter(
         x=distances_pace,
@@ -80,14 +93,15 @@ if uploaded_file is not None and temps_espere:
         hovertemplate=(
             'Distance: %{x:.2f} km<br>'
             'Altitude: %{y:.0f} m<br>'
-            'Temps: %{customdata[0]}'
+            'Temps (Minetti): %{customdata[0]}'
+            'Temps (Strava): %{customdata[1]}'
         ),
-        customdata=[[format_time(t)] for t in cumulative_time]
+        customdata=[[format_time(t), format_time(ts)] for t, ts in zip(cumulative_time, cumulative_time_strava)]
     ))
 
     # Configuration des axes
     fig.update_layout(
-        title="Profil Altitude et Allure Ajustée",
+        title="Profil Altitude et Temps estimé",
         xaxis=dict(title='Distance (km)'),
         yaxis=dict(title='Altitude (m)', side='left'),
         legend=dict(x=0, y=1),
@@ -98,22 +112,34 @@ if uploaded_file is not None and temps_espere:
     # Profil Allure
 
     fig2 = go.Figure()
+
+    # 1. Courbe Minetti (bleu)
     fig2.add_trace(go.Scatter(
         x=distances_pace,
         y=paces,
         mode='lines',
-        name='Allure ajustée',
-        yaxis="y2",
-        hovertemplate='Distance: %{x:.2f} km<br>Allure: %{y:.1f} min/km'
+        name='Allure Minetti',
+        line=dict(color='blue'),
+        hovertemplate='Distance: %{x:.2f} km<br>Allure Minetti: %{y:.1f} min/km'
     ))
 
-    # Configuration des axes
+    # 2. Courbe Strava (orange)
+    fig2.add_trace(go.Scatter(
+        x=distances_pace,
+        y=paces_strava,
+        mode='lines',
+        name='Allure Strava',
+        line=dict(color='orange', dash='dash'),  # tirets pour différencier
+        hovertemplate='Distance: %{x:.2f} km<br>Allure Strava: %{y:.1f} min/km'
+    ))
+
+    # Configuration générale
     fig2.update_layout(
-        title="Profil Altitude et Allure Ajustée",
+        title="Comparaison des Allures Ajustées",
         xaxis=dict(title='Distance (km)'),
         yaxis=dict(title='Allure (min/km)', overlaying='y', side='left', autorange='reversed'),
         legend=dict(x=0, y=1),
-        height=300,
+        height=400,
     )
 
     st.plotly_chart(fig2, use_container_width=True)

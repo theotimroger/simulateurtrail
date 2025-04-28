@@ -28,6 +28,4 @@ plt.show()
 # Affiche les coefficients
 print("Coefficients du polynôme (degré 3) :", coeffs)
 
-def strava_cost(i):
-    a, b, c, d = -3.32959069*10**(-6), 1.46184676*10**(-3), 3.07428877*10**(-2), 1.03357331
-    return a * i**3 + b * i**2 + c*i + d
+
