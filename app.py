@@ -143,19 +143,19 @@ if uploaded_file is not None and temps_espere:
 
         st.success(f"Temps estimé au km {distance_target:.2f} : {h:02d}:{m:02d}:{s:02d}")
 
-with st.expander("ℹ️ Voir explication détaillée sur le calcul"):
+with st.expander("ℹVoir explication du calcul"):
     st.markdown(
         """
-        ### 🧠 Comment fonctionne ce simulateur ?
+        ### Comment fonctionne ce simulateur ?
 
         L'algorithme repose sur **le modèle biomécanique de Minetti**,
         qui estime le **coût énergétique** de la course à pied en fonction de la pente.
 
-        ➡️ **Sur terrain plat**, le coût énergétique est minimal.
-        ➡️ **En montée**, le coût énergétique augmente (on dépense plus pour s'élever).
+        ➡️ **Sur terrain plat**, le coût énergétique est minimal.\n
+        ➡️ **En montée**, le coût énergétique augmente (on dépense plus pour s'élever).\n
         ➡️ **En descente**, le coût diminue... mais on ne peut pas courir infiniment vite sans limite physique.
 
-        ### ⚙️ Calculs effectués :
+        ### Calculs effectués :
 
         - L'algorithme cherche une **vitesse ajustée à la pente (VAP)** qui vous permettrait d'atteindre ce temps,
           tout en tenant compte :
@@ -167,13 +167,13 @@ with st.expander("ℹ️ Voir explication détaillée sur le calcul"):
             - La vitesse instantanée est adaptée en fonction de ce coût,
             - En descente, la vitesse est plafonnée à 1.3 x VAP<sup>1</sup>.
 
-        ### 📈 Conséquences :
+        ### Conséquences :
 
         - Si votre vitesse max en descente est faible ➔ l'allure sur plat et en montée devra être plus rapide pour compenser.
         - Plus votre objectif de temps est ambitieux ➔ plus la vitesse globale devra être élevée.
 
         ---
-        **Modèle utilisé :**  
+        Modèle utilisé :  
         Minetti AE, Moia C, Roi GS, Susta D, Ferretti G. (2002)  
         *Energy cost of walking and running at extreme uphill and downhill slopes*  
         Journal of Applied Physiology.
