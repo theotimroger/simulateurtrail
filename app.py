@@ -143,7 +143,7 @@ if uploaded_file is not None and temps_espere:
 
         st.success(f"Temps estimé au km {distance_target:.2f} : {h:02d}:{m:02d}:{s:02d}")
 
-with st.expander("ℹVoir explication du calcul"):
+with st.expander("Voir explication du calcul"):
     st.markdown(
         """
         ### Comment fonctionne ce simulateur ?
