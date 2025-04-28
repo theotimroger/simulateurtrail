@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+import pandas as pd
 from utils import (
     process_gpx,
     trouver_vitesse_plate,
@@ -10,7 +11,9 @@ from utils import (
     trouver_vitesse_plate_strava,
     compute_cumulative_time_strava,
     compute_paces_strava,
-    vitesse_to_allure
+    vitesse_to_allure,
+    adjusted_speed_minetti,
+    adjusted_speed_strava
 )
 
 st.title("Analyse de trace GPX - Allure ajustée à la pente")
@@ -83,7 +86,7 @@ if uploaded_file is not None and temps_espere:
         st.markdown("<h3 style='text-align: center;'>Modèle Minetti</h3>", unsafe_allow_html=True)
         st.markdown(
         f"""
-        <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; text-align: center;">
+        <div style="background-color: white;color: black; padding: 10px; border-radius: 5px; text-align: center;">
             <strong>{allure_plat_str} min/km</strong>
         </div>
         """,
@@ -94,14 +97,44 @@ if uploaded_file is not None and temps_espere:
         st.markdown("<h3 style='text-align: center;'>Modèle Strava</h3>", unsafe_allow_html=True)
         st.markdown(
         f"""
-        <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; text-align: center;">
+        <div style="background-color: white; color: black; padding: 10px; border-radius: 5px; text-align: center;">
             <strong>{allure_plat_str_strava} min/km</strong>
         </div>
         """,
         unsafe_allow_html=True
     )
+        
+    ## TABLEAU DES ALLURES EN FONCTION DES PENTES
 
-    # Recalcul complet avec la bonne vitesse
+    pentes = list(range(-30, 35, 5))  # de -30% à +35% tous les 5%
+
+        # Construire les listes d'allures
+    allures_minetti = []
+    allures_strava = []
+
+    for pente in pentes:
+        v_minetti = adjusted_speed_minetti(flat_speed, pente)
+        v_strava = adjusted_speed_strava(flat_speed, pente)
+        allure_minetti = vitesse_to_allure(v_minetti)
+        allure_strava = vitesse_to_allure(v_strava)
+        allures_minetti.append(allure_minetti)
+        allures_strava.append(allure_strava)
+
+    # Créer un DataFrame
+    df = pd.DataFrame({
+        "Pente (%)": pentes,
+        "Allure Minetti (min/km)": allures_minetti,
+        "Allure Strava (min/km)": allures_strava
+    })
+
+    # Afficher dans Streamlit
+    st.write("### Tableau comparatif des allures ajustées")
+    st.dataframe(df)
+
+
+
+
+    # Recalcul du temps cumulé avec la bonne vitesse
     cumulative_time = compute_cumulative_time(flat_speed, distances, elevations)
     cumulative_time_strava = compute_cumulative_time_strava(flat_speed_strava, distances, elevations)
 

@@ -3,3 +3,4 @@ gpxpy
 plotly
 numpy
 matplotlib
+pandas
