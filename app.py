@@ -56,8 +56,8 @@ if uploaded_file is not None and temps_espere:
         st.stop()
 
     # Trouver la vitesse sur plat correcte
-    flat_speed = trouver_vitesse_plate(distances_pace, elevations, temps_espere_sec)
-    flat_speed_strava = trouver_vitesse_plate_strava(distances_pace, elevations, temps_espere_sec)
+    flat_speed = trouver_vitesse_plate(distances, elevations, temps_espere_sec)
+    flat_speed_strava = trouver_vitesse_plate_strava(distances, elevations, temps_espere_sec)
 
 
     # Calcul de l'allure correspondante
@@ -69,7 +69,7 @@ if uploaded_file is not None and temps_espere:
     sec_per_km_strava = 1000 / flat_speed_strava
     minutes_strava = int(sec_per_km_strava // 60)
     seconds_strava = int(sec_per_km_strava % 60)
-    allure_plat_str_strava = f"{minutes:02d}:{seconds:02d}"
+    allure_plat_str_strava = f"{minutes_strava:02d}:{seconds_strava:02d}"
 
     st.info(f"Allure constant équivalente sur du plat (Minetti): {allure_plat_str} min/km")
     st.info(f"Allure constant équivalente sur du plat (Strava): {allure_plat_str_strava} min/km")
@@ -93,7 +93,7 @@ if uploaded_file is not None and temps_espere:
         hovertemplate=(
             'Distance: %{x:.2f} km<br>'
             'Altitude: %{y:.0f} m<br>'
-            'Temps (Minetti): %{customdata[0]}'
+            'Temps (Minetti): %{customdata[0]}<br>'
             'Temps (Strava): %{customdata[1]}'
         ),
         customdata=[[format_time(t), format_time(ts)] for t, ts in zip(cumulative_time, cumulative_time_strava)]

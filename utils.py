@@ -30,7 +30,7 @@ def minetti_cost_running(i):
     return a * i**5 + b * i**4 + c*i**3 + d*i**2 + e*i + f
 
 def strava_cost(i):
-    a, b, c, d = -3.32959069*10**(-6), 1.46184676*10**(-3), 3.07428877*10**(-2), 1.03357331
+    a, b, c, d = -3.32959069, 14.61846764, 3.07428877, 1.03357331
     return a * i**3 + b * i**2 + c*i + d
 
 def adjusted_speed_minetti(flat_speed, slope):
@@ -85,7 +85,7 @@ def simulate_temps_total(flat_speed, distances, elevations):
 
 
 
-def trouver_vitesse_plate(distances_pace, elevations, temps_espere_sec, precision=1):
+def trouver_vitesse_plate(distances, elevations, temps_espere_sec, precision=1):
     """
     Trouve la vitesse sur plat équivalente pour correspondre au temps espéré
     en utilisant une recherche par dichotomie.
@@ -106,7 +106,7 @@ def trouver_vitesse_plate(distances_pace, elevations, temps_espere_sec, precisio
     while v_max - v_min > 0.0001:
         iteration += 1
         v_mid = (v_min + v_max) / 2
-        temps_mid = simulate_temps_total(v_mid, distances_pace, elevations)
+        temps_mid = simulate_temps_total(v_mid, distances, elevations)
 
         if abs(temps_mid - temps_espere_sec) < precision:
             return v_mid  # Vitesse trouvée !
@@ -211,7 +211,7 @@ def simulate_temps_total_strava(flat_speed, distances, elevations):
 
 
 
-def trouver_vitesse_plate_strava(distances_pace, elevations, temps_espere_sec, precision=1):
+def trouver_vitesse_plate_strava(distances, elevations, temps_espere_sec, precision=1):
     """
     Trouve la vitesse sur plat équivalente pour correspondre au temps espéré
     en utilisant une recherche par dichotomie.
@@ -232,7 +232,7 @@ def trouver_vitesse_plate_strava(distances_pace, elevations, temps_espere_sec, p
     while v_max - v_min > 0.0001:
         iteration += 1
         v_mid = (v_min + v_max) / 2
-        temps_mid = simulate_temps_total_strava(v_mid, distances_pace, elevations)
+        temps_mid = simulate_temps_total_strava(v_mid, distances, elevations)
 
         if abs(temps_mid - temps_espere_sec) < precision:
             return v_mid  # Vitesse trouvée !
@@ -303,6 +303,8 @@ def compute_paces_strava(distances, elevations, flat_speed):
 
         paces.append(pace)
     return paces
+
+
 ##-------------------------------------------
 
 def process_gpx(gpx_content):
