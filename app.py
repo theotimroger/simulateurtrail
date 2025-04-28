@@ -26,6 +26,8 @@ st.info(
     - votre **profil d'allure ajustée** tout au long du parcours,
     - et vos **temps de passage estimés** à chaque point.
 
+    2 Modèles sont proposés ici: celui de Minetti et celui de Strava (détails en bas de page).
+
     **Chargez simplement votre fichier GPX, entrez votre objectif de temps et votre allure maximale.**
     """
 )
@@ -170,39 +172,35 @@ with st.expander("Voir explication du calcul"):
         """
         ### Comment fonctionne ce simulateur ?
 
-        L'algorithme repose sur **le modèle biomécanique de Minetti**,
-        qui estime le **coût énergétique** de la course à pied en fonction de la pente.
+        L'algorithme repose sur **le modèle biomécanique de Minetti**<sup>1</sup>, qui estime le **coût énergétique** de la course à pied en fonction de la pente, et **le modèle fréquence cardiaque identique de Strava**<sup>2</sup>, qui estime l'allure ajustée en fonction de la fréquence cardiaque.
+        
 
         ➡️ **Sur terrain plat**, le coût énergétique est minimal.\n
-        ➡️ **En montée**, le coût énergétique augmente (on dépense plus pour s'élever).\n
+        ➡️ **En montée**, le coût énergétique augmente (on dépense plus pour s'élever), la fréquence cardiaque aussi.\n
         ➡️ **En descente**, le coût diminue... mais on ne peut pas courir infiniment vite sans limite physique.
 
         ### Calculs effectués :
 
-        - L'algorithme cherche une **vitesse ajustée à la pente (VAP)**<sup>1</sup> qui vous permettrait d'atteindre ce temps,
+        - L'algorithme cherche une **vitesse ajustée à la pente (VAP)**<sup>3</sup> qui vous permettrait d'atteindre ce temps,
           tout en tenant compte :
             - du profil de pente de votre trace GPX,
             - du temps total espéré
 
         - Pour chaque segment du parcours :
-            - Le coût énergétique est recalculé selon la pente locale,
+            - Le coût (énergétique ou en fréquence cardiaque) est calculé selon la pente locale,
             - La vitesse instantanée est adaptée en fonction de ce coût,
-            - En descente, la vitesse est plafonnée à 1.3 x VAP<sup>2</sup>.
+            - En descente, la vitesse est plafonnée à 1.3 x VAP pour le modèle de Minetti<sup>4</sup>.
 
-        ### Conséquences :
-
-        - Si votre vitesse max en descente est faible ➔ l'allure sur plat et en montée devra être plus rapide pour compenser.
-        - Plus votre objectif de temps est ambitieux ➔ plus la vitesse globale devra être élevée.
+        - Différence entre les 2 modèles :
+            - Le modèle Minetti se base sur le coût énergétique et les tests ont été réalisés en laboratoire. Il est très généreux sur la vitesse en descente.
+            - Le modèle de Strava se base sur sa base de données d'activités de traileurs du monde entier. L'estimation est donc issue d'activités en conditions "réelles". Ce modèle reflète sûrement mieux l'aspect technique des descentes.
 
         ---
-        Modèle utilisé :  
-        Minetti AE, Moia C, Roi GS, Susta D, Ferretti G. (2002)  
-        *Energy cost of walking and running at extreme uphill and downhill slopes*  
-        Journal of Applied Physiology.
+        <sup>1</sup> Minetti AE, Moia C, Roi GS, Susta D, Ferretti G. (2002), *Energy cost of walking and running at extreme uphill and downhill slopes* Journal of Applied Physiology.
+        <sup>2</sup> https://medium.com/strava-engineering/an-improved-gap-model-8b07ae8886c3
+        <sup>3</sup> Pour les utilisateurs de Strava, cette allure est également disponible dans les rapports d'activité.
+        <sup>4</sup> Je pense que le calcul doit encore être ajusté à ce niveau. Le modèle de Minetti ne prenant pas en compte la technicité du terrain, il estime qu'atteindre 20km/h sur une descente de pente comprise entre -13% et -20% est équivalent à courir à 11.2 km/h sur du plat.
         ---
-        <sup>1</sup> Pour les utilisateurs de Strava, cette allure est également disponible dans les rapports d'activité. Strava utilise la fréquence cardiaque pour déterminer l'allure ajuster à la pente
-        <sup>2</sup> Le modèle doit encore être ajusté à ce niveau. Le modèle de Minetti ne prenant pas en compte la technicité du terrain, il estime qu'atteindre 20km/h sur une descente de pente comprise entre -13% et -20% est équivalent à courir à 11.2 km/h sur du plat.
-
         """,
         unsafe_allow_html=True
     )
