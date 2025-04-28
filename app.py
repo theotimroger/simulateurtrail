@@ -10,6 +10,7 @@ from utils import (
     trouver_vitesse_plate_strava,
     compute_cumulative_time_strava,
     compute_paces_strava,
+    vitesse_to_allure
 )
 
 st.title("Analyse de trace GPX - Allure ajustée à la pente")
@@ -61,15 +62,10 @@ if uploaded_file is not None and temps_espere:
 
 
     # Calcul de l'allure correspondante
-    sec_per_km = 1000 / flat_speed
-    minutes = int(sec_per_km // 60)
-    seconds = int(sec_per_km % 60)
-    allure_plat_str = f"{minutes:02d}:{seconds:02d}"
 
-    sec_per_km_strava = 1000 / flat_speed_strava
-    minutes_strava = int(sec_per_km_strava // 60)
-    seconds_strava = int(sec_per_km_strava % 60)
-    allure_plat_str_strava = f"{minutes_strava:02d}:{seconds_strava:02d}"
+    allure_plat_str = vitesse_to_allure(flat_speed)
+
+    allure_plat_str_strava = vitesse_to_allure(flat_speed_strava)
 
     st.info(f"Allure constant équivalente sur du plat (Minetti): {allure_plat_str} min/km")
     st.info(f"Allure constant équivalente sur du plat (Strava): {allure_plat_str_strava} min/km")

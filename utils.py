@@ -13,6 +13,12 @@ def format_time(seconds):
     s = int(seconds % 60)
     return f"{h:02d}:{m:02d}:{s:02d}"
 
+def vitesse_to_allure(vitesse):
+    sec_per_km = 1000 / vitesse
+    minutes = int(sec_per_km // 60)
+    seconds = int(sec_per_km % 60)
+    return f"{minutes:02d}:{seconds:02d}"
+
 
 def parse_allure(allure_str):
     minutes, seconds = map(int, allure_str.split(":"))
