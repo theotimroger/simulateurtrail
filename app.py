@@ -28,7 +28,7 @@ st.info(
 
     2 Modèles sont proposés ici: celui de Minetti et celui de Strava (détails en bas de page).
 
-    **Chargez simplement votre fichier GPX, entrez votre objectif de temps et votre allure maximale.**
+    **Chargez simplement votre fichier GPX et entrez votre objectif de temps.**
     """
 )
 
