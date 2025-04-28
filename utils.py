@@ -33,7 +33,7 @@ def adjusted_speed(flat_speed, slope):
     i = slope / 100
     C0 = minetti_cost_running(0)
     Ci = minetti_cost_running(i)
-    v = min(2*flat_speed,flat_speed * (C0 / Ci)) #vitesse ajustée avec max car difficle d'aller bcp plus vite en descente. Sans cette limite, un coureur avec une VAP de 10,6km/h descdndrait à plus de 20km/h pour des pentes entre -13 et -21%
+    v = min(1.3*flat_speed,flat_speed * (C0 / Ci)) #vitesse ajustée avec max car difficle d'aller bcp plus vite en descente. Sans cette limite, un coureur avec une VAP de 10,6km/h descdndrait à plus de 20km/h pour des pentes entre -13 et -21%
     return v
 
 def smooth(y, box_pts=5):
