@@ -13,7 +13,8 @@ from utils import (
     compute_paces_strava,
     vitesse_to_allure,
     adjusted_speed_minetti,
-    adjusted_speed_strava
+    adjusted_speed_strava,
+    allure_to_v_asc
 )
 
 st.title("Analyse de trace GPX - Allure ajustée à la pente")
@@ -37,8 +38,10 @@ st.info(
 
 uploaded_file = st.file_uploader("Chargez votre fichier GPX", type=["gpx"])
 
-if uploaded_file is not None:
 ## -- AFFICHAGE DES INFOS RELATIVE AU PARCOURS --
+
+if uploaded_file is not None:
+
     gpx_content = uploaded_file.read().decode("utf-8")
 
     # Lecture brute : distances et altitudes
@@ -48,7 +51,7 @@ if uploaded_file is not None:
     st.markdown("""
     <div style='background-color: rgba(255,0,0,0.25); padding: 0px; border-radius: 10px; margin-bottom: 0px;'>
         <div style='text-align: center; margin-bottom: 0px;'>
-            <h4 style='margin: 0 0 0 0; color: rgba(255,0,0,1);'>Résumé de la trace</h4>
+            <h4 style='margin: 0 0 0 0; color: rgba(255,0,0,1);'>Résumé du parcours</h4>
         </div>
     """, unsafe_allow_html=True)
 
@@ -68,6 +71,10 @@ if uploaded_file is not None:
 
     st.markdown("</div>", unsafe_allow_html=True)  # fermeture du cadre
 
+## -----------------------------------------
+
+
+## INPUT DU TEMPS ESPERE SUR LA COURSE
     col_a, col_b = st.columns([1, 2])
 
     with col_a:
@@ -82,6 +89,8 @@ if uploaded_file is not None:
 
     with col_b:
         temps_espere = st.text_input("", value="06:15:30", label_visibility="collapsed")
+
+## -----------------------------------------
 
 ## -- CALCUL DE L'ALLURE AU COURS DU TEMPS
 if uploaded_file is not None and temps_espere:
@@ -124,20 +133,27 @@ if uploaded_file is not None and temps_espere:
         st.markdown(f"<div style='text-align: center; font-size: 16px; color: black;'>{allure_plat_str_strava} min/km</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
+
+    ## -----------------------------------------
+
         
-    ## TABLEAU DES ALLURES EN FONCTION DES PENTES
+    ## GRAPHE DES ALLURES EN FONCTION DES PENTES
 
     pentes = list(range(-30, 35, 1))  # de -30% à +35% tous les 5%
 
         # Construire les listes d'allures
     allures_minetti = []
     allures_strava = []
+    vitesses_asc_minetti = []
+    vitesses_asc_strava = []
 
     for pente in pentes:
         v_minetti = adjusted_speed_minetti(flat_speed, pente)
         v_strava = adjusted_speed_strava(flat_speed, pente)
         allure_minetti = vitesse_to_allure(v_minetti)
         allure_strava = vitesse_to_allure(v_strava)
+        v_asc_minetti = allure_to_v_asc(allure_minetti,pente)
+        v_asc_strava = allure_to_v_asc(allure_strava,pente)
         allures_minetti.append(allure_minetti)
         allures_strava.append(allure_strava)
 
@@ -217,7 +233,8 @@ if uploaded_file is not None and temps_espere:
     )
 
     # Streamlit affichage
-    st.plotly_chart(fig, use_container_width=True)
+    with st.expander("⌳ Afficher l'allure en fonction de la pente"):
+        st.plotly_chart(fig, use_container_width=True)
 
     # Recalcul du temps cumulé avec la bonne vitesse
     cumulative_time = compute_cumulative_time(flat_speed, distances, elevations)
@@ -228,6 +245,11 @@ if uploaded_file is not None and temps_espere:
 
     paces = compute_paces(distances, elevations, flat_speed)
     paces_strava = compute_paces_strava(distances, elevations, flat_speed_strava)
+    paces_str = []
+    paces_str_strava = []
+    for i in range(len(paces)):
+        paces_str.append(vitesse_to_allure(1000/paces[i]))
+        paces_str_strava.append(vitesse_to_allure(1000/paces_strava[i]))
 
     # Profil Altitude
     fig.add_trace(go.Scatter(
@@ -246,15 +268,15 @@ if uploaded_file is not None and temps_espere:
 
     # Configuration des axes
     fig.update_layout(
-        title="Profil Altitude et Temps estimé",
+        title="Profil Altimétrique et Temps estimé",
         xaxis=dict(title='Distance (km)'),
         yaxis=dict(title='Altitude (m)', side='left'),
         legend=dict(x=0, y=1),
         height=300,
     )
 
-    st.plotly_chart(fig, use_container_width=True)
-    # Profil Allure
+    with st.expander("🏔️ Afficher le profil altimétrique et les temps de passage estimés"):
+        st.plotly_chart(fig, use_container_width=True)
 
     fig2 = go.Figure()
 
@@ -265,7 +287,8 @@ if uploaded_file is not None and temps_espere:
         mode='lines',
         name='Allure Minetti',
         line=dict(color='blue'),
-        hovertemplate='Distance: %{x:.2f} km<br>Allure Minetti: %{y:.1f} min/km'
+        customdata=paces_str,
+        hovertemplate='Distance: %{x:.2f} km<br>Allure Minetti: %{customdata[0]}/km'
     ))
 
     # 2. Courbe Strava (orange)
@@ -275,23 +298,26 @@ if uploaded_file is not None and temps_espere:
         mode='lines',
         name='Allure Strava',
         line=dict(color='orange', dash='dash'),  # tirets pour différencier
-        hovertemplate='Distance: %{x:.2f} km<br>Allure Strava: %{y:.1f} min/km'
+        customdata=paces_str_strava,
+        hovertemplate='Distance: %{x:.2f} km<br>Allure Strava: %{customdata[0]}/km'
     ))
 
     # Configuration générale
     fig2.update_layout(
-        title="Comparaison des Allures Ajustées",
+        title="Comparaison des Allures Instantanées",
         xaxis=dict(title='Distance (km)'),
-        yaxis=dict(title='Allure (min/km)', overlaying='y', side='left', autorange='reversed'),
+        yaxis=dict(title='Allure (mm:ss/km)', overlaying='y', side='left', autorange='reversed'),
         legend=dict(x=0, y=1),
         height=400,
     )
 
-    st.plotly_chart(fig2, use_container_width=True)
+    with st.expander("🏃‍♂️ Afficher l'allure instantanée"):
+        st.plotly_chart(fig2, use_container_width=True)
+
 
     # Temps de passage
 
-with st.expander("Voir explication du calcul"):
+with st.expander("⚙️ Voir explication du calcul"):
     st.markdown(
         """
         ### Comment fonctionne ce simulateur ?

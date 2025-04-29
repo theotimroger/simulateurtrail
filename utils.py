@@ -23,12 +23,10 @@ def vitesse_to_allure(vitesse):
     return f"{minutes:02d}:{seconds:02d}"
 
 
-
 def parse_allure(allure_str):
     minutes, seconds = map(int, allure_str.split(":"))
     total_seconds = minutes * 60 + seconds
     return 1000 / total_seconds  # vitesse en m/s
-
 
 def minetti_cost_running(i):
     a, b, c, d, e, f = 155.4, -30.4, -43.3, 46.3, 19.5, 3.6
@@ -37,6 +35,21 @@ def minetti_cost_running(i):
 def strava_cost(i):
     a, b, c, d = -3.32959069, 14.61846764, 3.07428877, 1.03357331
     return a * i**3 + b * i**2 + c*i + d
+
+def allure_to_v_asc(allure,pente):
+    """calcul de la vitesse verticale en fonction de l'allure et de la pente
+        INPUT:
+        - allure (str) au format mm:ss
+        - pente (float) en m/100m (%)
+        
+        OUTPUT:
+        - v_asc en m/h
+    """
+    m, s = map(int, allure.split(":"))
+    allure_sec = m * 60 + s
+    km_par_heure = 3600/allure_sec
+    v_asc = km_par_heure*pente*10
+    return v_asc
 
 def adjusted_speed_minetti(flat_speed, slope):
     i = slope / 100
