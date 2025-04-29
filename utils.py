@@ -358,4 +358,4 @@ def calculate_deniv(elevations):
         else:
             d_plus.append(d_plus[-1])
             d_moins.append(d_moins[-1]+deniv_segment)
-    return d_plus[-1], d_moins[-1]
+    return round(d_plus[-1]), round(d_moins[-1])
