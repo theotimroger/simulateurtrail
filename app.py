@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+from streamlit_plotly_events import plotly_events
 from utils import (
     process_gpx,
     trouver_vitesse_plate,
@@ -14,7 +15,8 @@ from utils import (
     vitesse_to_allure,
     adjusted_speed_minetti,
     adjusted_speed_strava,
-    allure_to_v_asc
+    allure_to_v_asc,
+    allure_to_seconds
 )
 
 st.title("Analyse de trace GPX - Allure ajustée à la pente")
@@ -58,16 +60,16 @@ if uploaded_file is not None:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.markdown("<h4 style='text-align: center; color: black;'>Distance</h4>", unsafe_allow_html=True)
-        st.markdown(f"<div style='text-align: center; font-size: 16px; color: black; margin-bottom: 10;'>{distances[-1]:.1f} km</div>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>Distance</h4>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; font-size: 16px; margin-bottom: 10;'>{distances[-1]:.1f} km</div>", unsafe_allow_html=True)
 
     with col2:
-        st.markdown("<h4 style='text-align: center; color: black;'>D+</h4>", unsafe_allow_html=True)
-        st.markdown(f"<div style='text-align: center; font-size: 16px; color: black; margin-bottom: 10;'>{d_plus} m</div>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>D+</h4>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; font-size: 16px; margin-bottom: 10;'>{d_plus} m</div>", unsafe_allow_html=True)
 
     with col3:
-        st.markdown("<h4 style='text-align: center; color: black;'>D-</h4>", unsafe_allow_html=True)
-        st.markdown(f"<div style='text-align: center; font-size: 16px; color: black; margin-bottom: 10;'>{d_moins} m</div>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>D-</h4>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; font-size: 16px; margin-bottom: 10;'>{d_moins} m</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)  # fermeture du cadre
 
@@ -92,9 +94,11 @@ if uploaded_file is not None:
 
 ## -----------------------------------------
 
+
+
+
 ## -- CALCUL DE L'ALLURE AU COURS DU TEMPS
 if uploaded_file is not None and temps_espere:
-
 
     # Conversion temps espéré en secondes
     try:
@@ -109,7 +113,7 @@ if uploaded_file is not None and temps_espere:
     flat_speed_strava = trouver_vitesse_plate_strava(distances, elevations, temps_espere_sec)
 
 
-    # Calcul de l'allure correspondante
+    # Calcul de l'allure ajustée correspondante
 
     allure_plat_str = vitesse_to_allure(flat_speed)
 
@@ -125,16 +129,19 @@ if uploaded_file is not None and temps_espere:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("<h5 style='text-align: center; color: black;'>Modèle Minetti</h5>", unsafe_allow_html=True)
-        st.markdown(f"<div style='text-align: center; font-size: 16px; color: black;'>{allure_plat_str} min/km</div>", unsafe_allow_html=True)
+        st.markdown("<h5 style='text-align: center;'>Modèle Minetti</h5>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; font-size: 16px;'>{allure_plat_str} min/km</div>", unsafe_allow_html=True)
 
     with col2:
-        st.markdown("<h5 style='text-align: center; color: black;'>Modèle Strava</h5>", unsafe_allow_html=True)
-        st.markdown(f"<div style='text-align: center; font-size: 16px; color: black;'>{allure_plat_str_strava} min/km</div>", unsafe_allow_html=True)
+        st.markdown("<h5 style='text-align: center;'>Modèle Strava</h5>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; font-size: 16px;'>{allure_plat_str_strava} min/km</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
     ## -----------------------------------------
+
+
+
 
         
     ## GRAPHE DES ALLURES EN FONCTION DES PENTES
@@ -154,12 +161,10 @@ if uploaded_file is not None and temps_espere:
         allure_strava = vitesse_to_allure(v_strava)
         v_asc_minetti = allure_to_v_asc(allure_minetti,pente)
         v_asc_strava = allure_to_v_asc(allure_strava,pente)
+        vitesses_asc_minetti.append(round(v_asc_minetti))
+        vitesses_asc_strava.append(round(v_asc_strava))
         allures_minetti.append(allure_minetti)
         allures_strava.append(allure_strava)
-
-    def allure_to_seconds(allure_str):
-        minutes, seconds = map(int, allure_str.split(":"))
-        return minutes * 60 + seconds
 
     y_minetti = [allure_to_seconds(a) for a in allures_minetti]
     y_strava = [allure_to_seconds(a) for a in allures_strava]
@@ -179,11 +184,11 @@ if uploaded_file is not None and temps_espere:
         y=y_minetti,
         mode='lines',
         name='Minetti',
-        customdata=list(zip(allures_minetti, allures_strava)),  # ⚡ ATTENTION on met les 2 allures ensemble !
+        customdata=list(zip(allures_minetti, allures_strava,vitesses_asc_minetti,vitesses_asc_strava)),
         hovertemplate=(
             "Pente: %{x}%<br>" +
-            "Allure Minetti: %{customdata[0]}<br>" +
-            "Allure Strava: %{customdata[1]}<extra></extra>"
+            '<span style="color:blue;">Allure: %{customdata[0]}/km, V verticale: %{customdata[2]} m/h</span><br>'
+            '<span style="color:orange;"">Allure Strava: %{customdata[1]}/km, V verticale: %{customdata[3]} m/h</span>'
         ),
         line=dict(color='blue')
     ))
@@ -195,15 +200,9 @@ if uploaded_file is not None and temps_espere:
         mode='lines',
         name='Strava',
         customdata=list(zip(allures_minetti, allures_strava)),  # ⚡ ATTENTION on met les 2 allures ensemble !
-        hovertemplate=(
-            "Pente: %{x}%<br>" +
-            "Allure Minetti: %{customdata[0]}<br>" +
-            "Allure Strava: %{customdata[1]}<extra></extra>"
-        ),
+        hoverinfo='skip',
         line=dict(color='orange', dash='dash'),
-
     ))
-
     min_val = int(min(min(y_minetti), min(y_strava)) // 60) * 60
     max_val = int(max(max(y_minetti), max(y_strava)) // 60 + 2) * 60  # arrondi au dessus
 
@@ -235,12 +234,17 @@ if uploaded_file is not None and temps_espere:
     # Streamlit affichage
     with st.expander("⌳ Afficher l'allure en fonction de la pente"):
         st.plotly_chart(fig, use_container_width=True)
+    
+    ## --------------------------------------------------------------
+
+
+    ## GRAPHE ALTIMETRIE ET TEMPS DE PASSAGE
 
     # Recalcul du temps cumulé avec la bonne vitesse
     cumulative_time = compute_cumulative_time(flat_speed, distances, elevations)
     cumulative_time_strava = compute_cumulative_time_strava(flat_speed_strava, distances, elevations)
 
-    # Tracer les graphes
+    # GRAPHE
     fig = go.Figure()
 
     paces = compute_paces(distances, elevations, flat_speed)
@@ -274,9 +278,77 @@ if uploaded_file is not None and temps_espere:
         legend=dict(x=0, y=1),
         height=300,
     )
+    ## ---------------------------------------------------------
+    
+    ## PROFIL ALTIMETRIQUE ET DUREE DES SEGMENTS
 
     with st.expander("🏔️ Afficher le profil altimétrique et les temps de passage estimés"):
+
+        # Affichage du graphe comme avant
+        fig = go.Figure()
+
+        # Profil Altitude
+        fig.add_trace(go.Scatter(
+            x=distances_pace,
+            y=elevations[1:],  # pour correspondre aux distances_pace
+            mode='lines',
+            name='Altitude',
+            hovertemplate=(
+                'Distance: %{x:.2f} km<br>'
+                'Altitude: %{y:.0f} m<br>'
+                'Temps (Minetti): %{customdata[0]}<br>'
+                'Temps (Strava): %{customdata[1]}'
+            ),
+            customdata=[[format_time(t), format_time(ts)] for t, ts in zip(cumulative_time, cumulative_time_strava)]
+        ))
+
+        # Configuration
+        fig.update_layout(
+            title="Profil Altimétrique et Temps estimé",
+            xaxis=dict(title='Distance (km)'),
+            yaxis=dict(title='Altitude (m)', side='left'),
+            legend=dict(x=0, y=1),
+            height=300,
+            dragmode='select'  # activation de la sélection
+        )
         st.plotly_chart(fig, use_container_width=True)
+
+        # Sélection avec slider
+        st.markdown("### 📍 Sélectionner un segment")
+        start_km, end_km = st.slider(
+            "Choisissez deux distances (en km)",
+            min_value=0.0,
+            max_value=float(distances[-1]),
+            value=(0.0, float(distances[-1])),
+            step=0.1
+        )
+
+        if start_km >= end_km:
+            st.warning("⚠️ La distance d'arrivée doit être supérieure à la distance de départ.")
+        else:
+            indices = [i for i, d in enumerate(distances_pace) if start_km <= d <= end_km]
+
+            if len(indices) >= 2:
+                # Distance, temps, vitesse, allure
+                d_total = distances_pace[indices[-1]] - distances_pace[indices[0]]
+                t_total = cumulative_time[indices[-1]] - cumulative_time[indices[0]]
+                v_moy = (d_total * 1000) / t_total  # m/s
+                allure_moyenne = vitesse_to_allure(v_moy)
+
+                t_total_strava = cumulative_time_strava[indices[-1]] - cumulative_time_strava[indices[0]]
+                v_moy_strava = (d_total * 1000) / t_total_strava
+                allure_moyenne_strava = vitesse_to_allure(v_moy_strava)
+
+                # D+ / D- sur le segment
+                sub_elevations = elevations[indices[0]+1 : indices[-1]+2]  # +1 car distances_pace démarre à point 1
+                d_plus_seg, d_moins_seg = calculate_deniv(sub_elevations)
+
+                st.success(f"📏 Distance : {d_total:.2f} km  •  🧗 D+ : {d_plus_seg} m  •  ⬇️ D- : {abs(d_moins_seg)} m")
+                st.info(f"Minetti - ⏱ Durée estimée : {format_time(t_total)} • 🏃 Allure : {allure_moyenne}/km")
+                st.warning(f"Strava  - ⏱ Durée estimée : {format_time(t_total_strava)} • 🏃 Allure : {allure_moyenne_strava}/km")
+            else:
+                st.warning("Pas assez de points pour faire le calcul.")
+
 
     fig2 = go.Figure()
 
@@ -301,8 +373,7 @@ if uploaded_file is not None and temps_espere:
         customdata=paces_str_strava,
         hovertemplate='Distance: %{x:.2f} km<br>Allure Strava: %{customdata[0]}/km'
     ))
-
-    # Configuration générale
+        # Configuration générale
     fig2.update_layout(
         title="Comparaison des Allures Instantanées",
         xaxis=dict(title='Distance (km)'),
@@ -315,7 +386,8 @@ if uploaded_file is not None and temps_espere:
         st.plotly_chart(fig2, use_container_width=True)
 
 
-    # Temps de passage
+
+
 
 with st.expander("⚙️ Voir explication du calcul"):
     st.markdown(

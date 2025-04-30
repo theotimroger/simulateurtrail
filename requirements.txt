@@ -4,3 +4,4 @@ plotly
 numpy
 matplotlib
 pandas
+streamlit-plotly-events

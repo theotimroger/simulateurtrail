@@ -22,6 +22,9 @@ def vitesse_to_allure(vitesse):
     seconds = int(sec_per_km % 60)
     return f"{minutes:02d}:{seconds:02d}"
 
+def allure_to_seconds(allure_str):
+    minutes, seconds = map(int, allure_str.split(":"))
+    return minutes * 60 + seconds
 
 def parse_allure(allure_str):
     minutes, seconds = map(int, allure_str.split(":"))
