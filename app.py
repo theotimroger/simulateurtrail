@@ -247,14 +247,7 @@ if uploaded_file is not None and temps_espere:
     # GRAPHE
     fig = go.Figure()
 
-    paces = compute_paces(distances, elevations, flat_speed)
-    paces_strava = compute_paces_strava(distances, elevations, flat_speed_strava)
-    paces_str = []
-    paces_str_strava = []
-    for i in range(len(paces)):
-        paces_str.append(vitesse_to_allure(1000/paces[i]))
-        paces_str_strava.append(vitesse_to_allure(1000/paces_strava[i]))
-
+    
     # Profil Altitude
     fig.add_trace(go.Scatter(
         x=distances_pace,
@@ -350,6 +343,15 @@ if uploaded_file is not None and temps_espere:
                 st.warning("Pas assez de points pour faire le calcul.")
 
 
+    paces = compute_paces(distances, elevations, flat_speed)
+    paces_strava = compute_paces_strava(distances, elevations, flat_speed_strava)
+    paces_str = []
+    paces_str_strava = []
+    for i in range(len(paces)):
+        paces_str.append(vitesse_to_allure(1000/(60*paces[i])))
+        paces_str_strava.append(vitesse_to_allure(1000/(60*paces_strava[i])))
+
+
     fig2 = go.Figure()
 
     # 1. Courbe Minetti (bleu)
@@ -360,7 +362,7 @@ if uploaded_file is not None and temps_espere:
         name='Allure Minetti',
         line=dict(color='blue'),
         customdata=paces_str,
-        hovertemplate='Distance: %{x:.2f} km<br>Allure Minetti: %{customdata[0]}/km'
+        hovertemplate='Distance: %{x:.2f} km<br>Allure Minetti: %{customdata}/km'
     ))
 
     # 2. Courbe Strava (orange)
@@ -371,7 +373,7 @@ if uploaded_file is not None and temps_espere:
         name='Allure Strava',
         line=dict(color='orange', dash='dash'),  # tirets pour différencier
         customdata=paces_str_strava,
-        hovertemplate='Distance: %{x:.2f} km<br>Allure Strava: %{customdata[0]}/km'
+        hovertemplate='Distance: %{x:.2f} km<br>Allure Strava: %{customdata}/km'
     ))
         # Configuration générale
     fig2.update_layout(
