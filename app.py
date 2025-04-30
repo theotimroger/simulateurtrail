@@ -28,7 +28,7 @@ st.info(
  
 
     ➡️ L'algorithme calcule alors :
-    - votre **allure constante équivalente sur du plat**,
+    - votre **allure ajustée à la pente**, c'est l'allure pour laquelle vous fournissez le même effort sur du plat.
     - votre **profil d'allure ajustée** tout au long du parcours,
     - et vos **temps de passage estimés** à chaque point.
 
@@ -94,9 +94,6 @@ if uploaded_file is not None:
 
 ## -----------------------------------------
 
-
-
-
 ## -- CALCUL DE L'ALLURE AU COURS DU TEMPS
 if uploaded_file is not None and temps_espere:
 
@@ -108,6 +105,33 @@ if uploaded_file is not None and temps_espere:
         st.error("Format invalide. Utilisez hh:mm:ss")
         st.stop()
 
+
+    ## ALLURE MOYENNE
+    col_a, col_b = st.columns([1, 2])
+
+    with col_a:
+        st.markdown(
+            """
+            <div style="display: flex; align-items: center; justify-content: flex-end; height: 40px;">
+                <p style="font-weight: bold; margin: 0;">Allure moyenne</p>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
+
+    allure_moy = vitesse_to_allure(distances[-1] * 1000 / temps_espere_sec)
+
+    with col_b:
+        st.markdown(
+            f"""
+            <div style="display: flex; align-items: center; justify-content: flex-start; height: 40px;">
+                <p style="margin: 0;">{allure_moy}/km</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    
     # Trouver la vitesse sur plat correcte
     flat_speed = trouver_vitesse_plate(distances, elevations, temps_espere_sec)
     flat_speed_strava = trouver_vitesse_plate_strava(distances, elevations, temps_espere_sec)
@@ -120,9 +144,9 @@ if uploaded_file is not None and temps_espere:
     allure_plat_str_strava = vitesse_to_allure(flat_speed_strava)
 
     st.markdown("""
-    <div style='background-color: rgba(0,255,0,0.25); padding: 0px; border-radius: 10px; margin-bottom: 0px;'>
+    <div style='background-color: rgba(0, 180, 0,0.25); padding: 0px; border-radius: 10px; margin-bottom: 0px;'>
         <div style='text-align: center; margin-bottom: 0px;'>
-            <h4 style='margin: 0 0 0 0; color: rgba(0,255,0,1);'>Allure ajustée à la pente</h4>
+            <h4 style='margin: 0 0 0 0; color: rgba(0, 180, 0,1);'>Allure ajustée à la pente</h4>
         </div>
     """, unsafe_allow_html=True)
 
@@ -397,7 +421,7 @@ with st.expander("⚙️ Voir explication du calcul"):
         ### Comment fonctionne ce simulateur ?
 
         L'algorithme repose sur **le modèle biomécanique de Minetti**<sup>1</sup>, qui estime le **coût énergétique** de la course à pied en fonction de la pente, et **le modèle fréquence cardiaque identique de Strava**<sup>2</sup>, qui estime l'allure ajustée en fonction de la fréquence cardiaque.
-        
+        Pour les calculs, on suppose que la VAP est constante.
 
         ➡️ **Sur terrain plat**, le coût énergétique est minimal.\n
         ➡️ **En montée**, le coût énergétique augmente (on dépense plus pour s'élever), la fréquence cardiaque aussi.\n
@@ -419,6 +443,10 @@ with st.expander("⚙️ Voir explication du calcul"):
             - Le modèle Minetti se base sur le coût énergétique et les tests ont été réalisés en laboratoire. Il est très généreux sur la vitesse en descente.
             - Le modèle de Strava se base sur sa base de données d'activités de traileurs du monde entier. L'estimation est donc issue d'activités en conditions "réelles". Ce modèle reflète sûrement mieux l'aspect technique des descentes.
 
+        - Remarques et Conseils:
+            - L'algorithme n'effectue que des calculs et ne prend pas en compte votre état de fatigue au cours de la course.
+            - Utilisez les valeurs en sortie comme indicateurs mais pas comme l'unique possibilité.
+            - Ajustez les allures proposées en fonction de vos forces et faiblesse. A ce sujet, et vues les allures proposées, le modèle de Minetti semble plus adapté à des bons descendeurs.
         <hr>
         <p style="font-size: 0.8em;">
         <sup>1</sup> Minetti AE, Moia C, Roi GS, Susta D, Ferretti G. (2002), *Energy cost of walking and running at extreme uphill and downhill slopes*, Journal of Applied Physiology.<br>
