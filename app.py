@@ -208,13 +208,11 @@ if uploaded_file is not None and temps_espere:
         y=y_minetti,
         mode='lines',
         name='Minetti',
-        customdata=list(zip(allures_minetti, allures_strava,vitesses_asc_minetti,vitesses_asc_strava)),
+        customdata=list(zip(allures_minetti, vitesses_asc_minetti)),
         hovertemplate=(
-            "Pente: %{x}%<br>" +
-            '<span style="color:blue;">Allure: %{customdata[0]}/km, V verticale: %{customdata[2]} m/h</span><br>'
-            '<span style="color:orange;"">Allure Strava: %{customdata[1]}/km, V verticale: %{customdata[3]} m/h</span>'
+            '<span style="color:#1f77b4;">Allure: %{customdata[0]}/km, V verticale: %{customdata[1]} m/h</span><br><extra></extra>'
         ),
-        line=dict(color='blue')
+        line=dict(color='#1f77b4')
     ))
 
     # Courbe Strava
@@ -223,14 +221,17 @@ if uploaded_file is not None and temps_espere:
         y=y_strava,
         mode='lines',
         name='Strava',
-        customdata=list(zip(allures_minetti, allures_strava)),  # ⚡ ATTENTION on met les 2 allures ensemble !
-        hoverinfo='skip',
+        customdata=list(zip(allures_strava, vitesses_asc_strava)),
+        hovertemplate=(
+            '<span style="color:orange;">Allure: %{customdata[0]}/km, V verticale: %{customdata[1]} m/h</span><br><extra></extra>'
+        ),
         line=dict(color='orange', dash='dash'),
     ))
-    min_val = int(min(min(y_minetti), min(y_strava)) // 60) * 60
-    max_val = int(max(max(y_minetti), max(y_strava)) // 60 + 2) * 60  # arrondi au dessus
 
-    # Modifier l'axe y pour afficher mm:ss
+    # Définir les limites et ticks en allure (y)
+    min_val = int(min(min(y_minetti), min(y_strava)) // 60) * 60
+    max_val = int(max(max(y_minetti), max(y_strava)) // 60 + 2) * 60
+
     fig.update_layout(
         title="Allure ajustée en fonction de la pente",
         xaxis_title="Pente (%)",
@@ -240,20 +241,22 @@ if uploaded_file is not None and temps_espere:
         yaxis=dict(
             autorange='reversed',
             tickmode='array',
-            tickvals=list(range(min_val, max_val + 1, 120)),  # ici pas 30 mais 120
+            tickvals=list(range(min_val, max_val + 1, 120)),
             ticktext=[seconds_to_mmss(v) for v in range(min_val, max_val + 1, 120)]
         ),
-        hovermode="x",  # <<< ici la ligne suit l'axe x
-        hoverdistance=100,  # Distance pour activer l'hover même si pas exactement sur un point
-        spikedistance=1000,  # Permet de déclencher le spike sur tout le graphe
+        hovermode="x",
+        hoverdistance=100,
+        spikedistance=1000,
         xaxis=dict(
-            showspikes=True,       # Affiche la ligne verticale
-            spikecolor="grey",     # Couleur de la ligne
-            spikethickness=1,      # Épaisseur
-            spikedash="dot",       # Style : pointillé, ou solid
-            spikemode="across",    # La spike traverse tout verticalement
-        )
+            showspikes=True,
+            spikecolor="grey",
+            spikethickness=1,
+            spikedash="dot",
+            spikemode="across",
+        ),
+        dragmode=False,
     )
+        
 
     # Streamlit affichage
     with st.expander("⌳ Afficher l'allure en fonction de la pente"):
@@ -267,35 +270,6 @@ if uploaded_file is not None and temps_espere:
     # Recalcul du temps cumulé avec la bonne vitesse
     cumulative_time = compute_cumulative_time(flat_speed, distances, elevations)
     cumulative_time_strava = compute_cumulative_time_strava(flat_speed_strava, distances, elevations)
-
-    # GRAPHE
-    fig = go.Figure()
-
-    
-    # Profil Altitude
-    fig.add_trace(go.Scatter(
-        x=distances_pace,
-        y=elevations[1:],  # pour correspondre aux distances_pace
-        mode='lines',
-        name='Altitude',
-        hovertemplate=(
-            'Distance: %{x:.2f} km<br>'
-            'Altitude: %{y:.0f} m<br>'
-            'Temps (Minetti): %{customdata[0]}<br>'
-            'Temps (Strava): %{customdata[1]}'
-        ),
-        customdata=[[format_time(t), format_time(ts)] for t, ts in zip(cumulative_time, cumulative_time_strava)]
-    ))
-
-    # Configuration des axes
-    fig.update_layout(
-        title="Profil Altimétrique et Temps estimé",
-        xaxis=dict(title='Distance (km)'),
-        yaxis=dict(title='Altitude (m)', side='left'),
-        legend=dict(x=0, y=1),
-        height=300,
-    )
-    ## ---------------------------------------------------------
     
     ## PROFIL ALTIMETRIQUE ET DUREE DES SEGMENTS
 
@@ -313,20 +287,30 @@ if uploaded_file is not None and temps_espere:
             hovertemplate=(
                 'Distance: %{x:.2f} km<br>'
                 'Altitude: %{y:.0f} m<br>'
-                'Temps (Minetti): %{customdata[0]}<br>'
-                'Temps (Strava): %{customdata[1]}'
+                '<span style="color:#1f77b4;">Minetti: %{customdata[0]}</span><br>'
+                '<span style="color:orange;">Strava: %{customdata[1]}</span>'
             ),
             customdata=[[format_time(t), format_time(ts)] for t, ts in zip(cumulative_time, cumulative_time_strava)]
         ))
 
         # Configuration
         fig.update_layout(
-            title="Profil Altimétrique et Temps estimé",
-            xaxis=dict(title='Distance (km)'),
+            title="Profil Altimétrique et Temps de passage estimé",
+            xaxis=dict(
+                title='Distance (km)',
+                showspikes=True,
+                spikecolor="grey",
+                spikethickness=1,
+                spikedash="dot",
+                spikemode="across"
+            ),
             yaxis=dict(title='Altitude (m)', side='left'),
             legend=dict(x=0, y=1),
             height=300,
-            dragmode='select'  # activation de la sélection
+            hoverdistance=100,
+            spikedistance=1000,
+            hovermode = 'x',
+            dragmode=False  # activation de la sélection
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -367,6 +351,10 @@ if uploaded_file is not None and temps_espere:
                 st.warning("Pas assez de points pour faire le calcul.")
 
 
+
+
+    ## ALLURE INSTANTANEE
+
     paces = compute_paces(distances, elevations, flat_speed)
     paces_strava = compute_paces_strava(distances, elevations, flat_speed_strava)
     paces_str = []
@@ -384,7 +372,7 @@ if uploaded_file is not None and temps_espere:
         y=paces,
         mode='lines',
         name='Allure Minetti',
-        line=dict(color='blue'),
+        line=dict(color='#1f77b4'),
         customdata=paces_str,
         hovertemplate='Distance: %{x:.2f} km<br>Allure Minetti: %{customdata}/km'
     ))
@@ -402,10 +390,22 @@ if uploaded_file is not None and temps_espere:
         # Configuration générale
     fig2.update_layout(
         title="Comparaison des Allures Instantanées",
-        xaxis=dict(title='Distance (km)'),
+        xaxis=dict(
+            title='Distance (km)',
+            showspikes=True,
+            spikecolor="grey",
+            spikethickness=1,
+            spikedash="dot",
+            spikemode="across",
+        ),
         yaxis=dict(title='Allure (mm:ss/km)', overlaying='y', side='left', autorange='reversed'),
         legend=dict(x=0, y=1),
         height=400,
+        dragmode= False,
+        hovermode = 'x',
+        hoverdistance=100,
+        spikedistance=1000,
+
     )
 
     with st.expander("🏃‍♂️ Afficher l'allure instantanée"):
