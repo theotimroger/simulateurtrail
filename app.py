@@ -2,6 +2,8 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 from streamlit_plotly_events import plotly_events
+import folium
+from streamlit_folium import st_folium
 from utils import (
     process_gpx,
     trouver_vitesse_plate,
@@ -47,16 +49,29 @@ if uploaded_file is not None:
     gpx_content = uploaded_file.read().decode("utf-8")
 
     # Lecture brute : distances et altitudes
-    distances, elevations, distances_pace = process_gpx(gpx_content)
+    distances, elevations, distances_pace, coords = process_gpx(gpx_content)
     d_plus, d_moins = calculate_deniv(elevations)
 
     st.markdown("""
     <div style='background-color: rgba(255,0,0,0.25); padding: 0px; border-radius: 10px; margin-bottom: 0px;'>
         <div style='text-align: center; margin-bottom: 0px;'>
-            <h4 style='margin: 0 0 0 0; color: rgba(255,0,0,1);'>Résumé du parcours</h4>
+            <h4 style='margin: 0 0 0 0; color: rgba(255,0,0,1);'>🗺️ Résumé du parcours</h4>
         </div>
     """, unsafe_allow_html=True)
+    # Créer la carte centrée sur le point moyen
+    if coords:
+        lat_moy = sum(lat for lat, lon in coords) / len(coords)
+        lon_moy = sum(lon for lat, lon in coords) / len(coords)
 
+        m = folium.Map(location=[lat_moy, lon_moy], zoom_start=13, tiles='OpenStreetMap',attr='© OpenStreetMap contributors')
+        m.fit_bounds(coords)
+
+        folium.PolyLine(coords, color="blue", weight=3).add_to(m)
+        st_folium(m, width=700, height=500)
+    else:
+        st.warning("Impossible de récupérer les coordonnées GPS.")
+
+    
     col1, col2, col3 = st.columns(3)
 
     with col1:

@@ -336,6 +336,7 @@ def process_gpx(gpx_content):
     total_distance = 0
     distances = []
     elevations = []
+    coords = []
 
     DISTANCE_MIN = 30  # mètres entre 2 points retenus
     distance_since_last_save = 0
@@ -343,6 +344,7 @@ def process_gpx(gpx_content):
     for track in gpx.tracks:
         for segment in track.segments:
             for point in segment.points:
+                coords.append((point.latitude, point.longitude))
                 if last_point is not None:
                     d = point.distance_3d(last_point) or 0
                     total_distance += d
@@ -361,7 +363,7 @@ def process_gpx(gpx_content):
 
     distances_pace = [(distances[i] + distances[i-1]) / 2 for i in range(1, len(distances))]
 
-    return distances, elevations, distances_pace
+    return distances, elevations, distances_pace, coords
 
 def calculate_deniv(elevations):
     d_plus = [0]
